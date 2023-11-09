@@ -12,11 +12,13 @@ public class UsuarioController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IValidator<Usuario> _validator;
+    private readonly IValidator<Inativacao> _validatorI;
 
-    public UsuarioController(AppDbContext context, IValidator<Usuario> validator)
+    public UsuarioController(AppDbContext context, IValidator<Usuario> validator, IValidator<Inativacao> validatorI)
     {
         _context = context;
         _validator = validator;
+        _validatorI = validatorI;
     }
 
     [HttpGet]
@@ -33,7 +35,7 @@ public class UsuarioController : ControllerBase
         return usuarios;
     }
 
-    [HttpGet("nome/{nome:string}")]
+    [HttpGet("nome/{nome}")]
     public ActionResult<IEnumerable<Usuario>> GetNome(string nome)
     {
         UsuarioAppServices appServices = new UsuarioAppServices(_context, _validator);
@@ -47,7 +49,7 @@ public class UsuarioController : ControllerBase
         return usuarios;
     }
 
-    [HttpGet("email/{email:string}")]
+    [HttpGet("email/{email}")]
     public ActionResult<Usuario> GetEmail(string email)
     {
         UsuarioAppServices appServices = new UsuarioAppServices(_context, _validator);
@@ -75,7 +77,7 @@ public class UsuarioController : ControllerBase
         return usuario;
     }
 
-    [HttpPost]
+    [HttpPost("cadastro")]
     public ActionResult Post(Usuario usuario)
     {
         UsuarioAppServices appServices = new UsuarioAppServices(_context, _validator);
@@ -89,8 +91,36 @@ public class UsuarioController : ControllerBase
         return BadRequest(error);
     }
 
-    [HttpPost("login")]
-    public ActionResult<Usuario> Post([FromBody] string email, string senha)
+    [HttpPost("inativacao")]
+    public ActionResult Post(Inativacao inativacao)
+    {
+        InativacaoAppServices appServices = new InativacaoAppServices(_context, _validatorI);
+        var error = appServices.InativaConta(inativacao);
+
+        if(error is null)
+        {
+            return Ok("Usuario inativado!!");
+        }
+
+        return BadRequest(error);
+    }
+
+    [HttpPost("reativar/{id}:int")]
+    public ActionResult Post(int id, DateTime dataFim)
+    {
+        InativacaoAppServices appServices = new InativacaoAppServices(_context, _validatorI);
+        var error = appServices.AlteraInativacao(id, dataFim);
+
+        if (error is null)
+        {
+            return Ok("Usuario reativado!");
+        }
+
+        return BadRequest(error);
+    }
+
+    [HttpPost("login/{email}")]
+    public ActionResult<dynamic> Post(string email, string senha)
     {
         UsuarioAppServices appServices = new UsuarioAppServices(_context, _validator);
         var usuario = appServices.LogaUsuario(email, senha);
@@ -111,6 +141,7 @@ public class UsuarioController : ControllerBase
 
         if (error is null)
         {
+            usuario.Senha = "";
             return Ok(usuario);
         }
 

@@ -1,6 +1,7 @@
 ﻿using APICadastro.Context;
 using APICadastro.Models;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 
 namespace APICadastro.Services;
 
@@ -17,6 +18,27 @@ public class InativacaoAppServices
 
     public IEnumerable<string> InativaConta(Inativacao inativacao)
     {
+        var usuario = _context.Usuarios.Include(u => u.Inativacoes).FirstOrDefault(u => u.UsuarioId ==  inativacao.UsuarioId);
+
+        if(usuario is null)
+        {
+            List<string> message = new List<string>();
+            message.Add("Usuario não encontrado...");
+            return message;
+        }
+
+        var inativacoes = usuario.Inativacoes;
+
+        foreach (var item in inativacoes)
+        {
+            if (item.DataFim == null || item.DataFim > DateTime.Now)
+            {
+                List<string> message = new List<string>();
+                message.Add("Usuario ja inativo...");
+                return message;
+            }
+        }
+
         var result = _validator.Validate(inativacao);
         if (!result.IsValid)
         {
@@ -29,20 +51,30 @@ public class InativacaoAppServices
         return null;
     }
 
-    public IEnumerable<string> AlteraInativacao(int id, Inativacao inativacao)
+    public IEnumerable<string> AlteraInativacao(int id, DateTime dataFim)
     {    
-        var result = _validator.Validate(inativacao);
-        if (!result.IsValid)
+        var usuario = _context.Usuarios.Include(u => u.Inativacoes).FirstOrDefault(u => u.UsuarioId == id);
+        List<string> message = new List<string>();
+
+        if (usuario is null)
         {
-            var message = result.Errors.Select(e => e.ErrorMessage);
+            message.Add("Usuario não encontrado...");
             return message;
         }
 
-        var inativacaoOriginal = _context.Inativacoes.Find(id);
+        var inativacoes = usuario.Inativacoes;
 
-        inativacaoOriginal.DataFim = inativacao.DataFim;
-        _context.Update(inativacaoOriginal);
-        _context.SaveChanges();
-        return null;
+        foreach (var item in inativacoes)
+        {
+            if (item.DataFim != null || item.DataFim > DateTime.Now)
+            {
+                item.DataFim = dataFim;
+                _context.Update(item);
+                return null;
+            }
+        }
+
+        message.Add("Usuario ja ativo...");
+        return message;
     }
 }

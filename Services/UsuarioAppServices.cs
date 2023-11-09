@@ -25,6 +25,15 @@ public class UsuarioAppServices
             return message;
         }
 
+        var usuarioEmail = _context.Usuarios.FirstOrDefault(u => u.Email == usuario.Email);
+
+        if (usuarioEmail != null)
+        {
+            List<string> message = new List<string>();
+            message.Add("Email ja esta em uso...");
+            return message;
+        }
+
         usuario.Senha = Argon2.Hash(usuario.Senha);
 
         _context.Usuarios.Add(usuario);
@@ -39,6 +48,15 @@ public class UsuarioAppServices
         {
             List<string> message = new List<string>();
             message.Add("Usuario não encontrado...");
+            return message;
+        }
+
+        var usuarioEmail = _context.Usuarios.FirstOrDefault(u => u.Email == usuario.Email);
+
+        if (usuarioEmail != null)
+        {
+            List<string> message = new List<string>();
+            message.Add("Email ja esta em uso...");
             return message;
         }
 
@@ -66,9 +84,7 @@ public class UsuarioAppServices
             return null;
         }
 
-        var senhaHash = Argon2.Hash(senha);
-
-        if (usuario.Senha == senhaHash)
+        if (Argon2.Verify(usuario.Senha, senha))
         {
             var token = TokenAppServices.GenerateToken(usuario);
             return new
@@ -120,5 +136,12 @@ public class UsuarioAppServices
         var usuario = _context.Usuarios.AsNoTrackingWithIdentityResolution().FirstOrDefault(u => u.UsuarioId == id);
 
         return usuario;
+    }
+
+    public List<Usuario> BuscaUsuariosInativados()
+    {
+        var usuarios = _context.Usuarios.AsNoTrackingWithIdentityResolution().Include(u => u.Inativacoes).ToList();
+
+        return usuarios;
     }
 }

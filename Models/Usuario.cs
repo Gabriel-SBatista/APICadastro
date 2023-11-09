@@ -49,8 +49,8 @@ public class UsuarioValidator : AbstractValidator<Usuario>
     public UsuarioValidator()
     {
         RuleFor(u => u.Nome).NotEmpty();
-        RuleFor(u => u.Email).NotEmpty().EmailAddress();
-        RuleFor(u => u.Senha).NotEmpty().MinimumLength(7);
-        RuleFor(u => u.VerificaSenha()).Equals(true);
+        RuleFor(u => u.Email).EmailAddress();
+        RuleFor(u => u.Senha).MinimumLength(7);
+        RuleFor(u => u.VerificaSenha()).Must(u => u == true).WithMessage("Senha deve conter letra minuscula, maiuscula e numero");
     }
 }
