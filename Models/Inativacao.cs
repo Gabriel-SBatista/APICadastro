@@ -9,7 +9,7 @@ public class Inativacao
     public int InativacaoID { get; set; }
     [Required]
     public DateTime DataInicio { get; set; }
-    public DateTime DataFim { get; set; }
+    public DateTime? DataFim { get; set; }
     public int UsuarioId { get; set; }
     [JsonIgnore]
     public Usuario? Usuario { get; set; }

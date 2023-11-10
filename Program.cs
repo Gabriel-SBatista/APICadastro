@@ -1,5 +1,6 @@
 using APICadastro.Context;
 using APICadastro.Models;
+using APICadastro.Services;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -24,6 +25,8 @@ string sqlServerConnection = builder.Configuration.GetConnectionString("DefaultC
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(sqlServerConnection));
 builder.Services.AddScoped<IValidator<Usuario>, UsuarioValidator>();
 builder.Services.AddScoped<IValidator<Inativacao>, InativacaoValidator>();
+builder.Services.AddScoped<UsuarioAppServices>();
+builder.Services.AddScoped<InativacaoAppServices>();
 
 var app = builder.Build();
 

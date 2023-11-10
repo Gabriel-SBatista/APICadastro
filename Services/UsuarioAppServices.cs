@@ -51,14 +51,17 @@ public class UsuarioAppServices
             return message;
         }
 
-        var usuarioEmail = _context.Usuarios.FirstOrDefault(u => u.Email == usuario.Email);
-
-        if (usuarioEmail != null)
+        if(usuarioOriginal.Email != usuario.Email)
         {
-            List<string> message = new List<string>();
-            message.Add("Email ja esta em uso...");
-            return message;
-        }
+            var usuarioEmail = _context.Usuarios.FirstOrDefault(u => u.Email == usuario.Email);
+
+            if (usuarioEmail != null)
+            {
+                List<string> message = new List<string>();
+                message.Add("Email ja esta em uso...");
+                return message;
+            }
+        }      
 
         ValidationResult result = _validator.Validate(usuario);
         if (!result.IsValid)
@@ -78,7 +81,7 @@ public class UsuarioAppServices
 
     public dynamic LogaUsuario(string email, string senha)
     {
-        var usuario = _context.Usuarios.FirstOrDefault(u => u.Email == email);
+        var usuario = _context.Usuarios.Include(u => u.Inativacoes).FirstOrDefault(u => u.Email == email);
         if (usuario is null)
         {
             return null;
@@ -86,10 +89,19 @@ public class UsuarioAppServices
 
         if (Argon2.Verify(usuario.Senha, senha))
         {
+            foreach (var item in  usuario.Inativacoes)
+            {
+                if (item.DataFim > DateTime.Now)
+                {
+                    return null;
+                }
+            }
+
             var token = TokenAppServices.GenerateToken(usuario);
             return new
             {
-                usuario = usuario,
+                nome = usuario.Nome,
+                email = usuario.Email,
                 token = token
             };
         }
@@ -118,17 +130,10 @@ public class UsuarioAppServices
     }
 
     public List<Usuario> BuscaUsuariosNome(string nome)
-    {
-        var usuarios = _context.Usuarios.AsNoTrackingWithIdentityResolution().Where(u => u.Nome == nome).ToList();
+    {      
+        var usuarios = _context.Usuarios.AsNoTrackingWithIdentityResolution().Where(u => u.Email == nome || u.Nome == nome).ToList();
 
         return usuarios;
-    }
-
-    public Usuario BuscaUsuarioEmail(string email)
-    {
-        var usuario = _context.Usuarios.AsNoTrackingWithIdentityResolution().FirstOrDefault(u => u.Email == email);
-
-        return usuario;
     }
 
     public Usuario BuscaUsuarioId(int id)
@@ -138,7 +143,7 @@ public class UsuarioAppServices
         return usuario;
     }
 
-    public List<Usuario> BuscaUsuariosInativados()
+    public List<Usuario> BuscaInativacoes()
     {
         var usuarios = _context.Usuarios.AsNoTrackingWithIdentityResolution().Include(u => u.Inativacoes).ToList();
 

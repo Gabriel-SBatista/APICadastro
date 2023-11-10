@@ -7,27 +7,24 @@ using FluentValidation;
 namespace APICadastro.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("usuarios")]
 public class UsuarioController : ControllerBase
-{
-    private readonly AppDbContext _context;
-    private readonly IValidator<Usuario> _validator;
-    private readonly IValidator<Inativacao> _validatorI;
+{   
+    private readonly UsuarioAppServices _usuarioAppServices;
+    private readonly InativacaoAppServices _inativacaoAppServices;
 
-    public UsuarioController(AppDbContext context, IValidator<Usuario> validator, IValidator<Inativacao> validatorI)
+    public UsuarioController(UsuarioAppServices usuarioAppServices, InativacaoAppServices inativacaoAppServices)
     {
-        _context = context;
-        _validator = validator;
-        _validatorI = validatorI;
+        _usuarioAppServices = usuarioAppServices;
+        _inativacaoAppServices = inativacaoAppServices;
     }
 
     [HttpGet]
     public ActionResult<IEnumerable<Usuario>> Get()
     {
-        UsuarioAppServices appServices = new UsuarioAppServices(_context, _validator);
-        var usuarios = appServices.BuscaUsuarios();
+        var usuarios = _usuarioAppServices.BuscaUsuarios();
 
-        if (usuarios is null)
+        if (usuarios.Count == 0)
         {
             return NotFound();
         }
@@ -35,13 +32,25 @@ public class UsuarioController : ControllerBase
         return usuarios;
     }
 
-    [HttpGet("nome/{nome}")]
+    [HttpGet("inativacao")]
+    public ActionResult<IEnumerable<Usuario>> GetInativo()
+    {
+        var usuarios = _usuarioAppServices.BuscaInativacoes();
+
+        if (usuarios.Count == 0)
+        {
+            return NotFound();
+        }
+
+        return usuarios;
+    }
+
+    [HttpGet("{nome}")]
     public ActionResult<IEnumerable<Usuario>> GetNome(string nome)
     {
-        UsuarioAppServices appServices = new UsuarioAppServices(_context, _validator);
-        var usuarios = appServices.BuscaUsuariosNome(nome);
+        var usuarios = _usuarioAppServices.BuscaUsuariosNome(nome);
 
-        if (usuarios is null)
+        if (usuarios.Count == 0)
         {
             return NotFound("Usuario não encontrado...");
         }
@@ -49,25 +58,10 @@ public class UsuarioController : ControllerBase
         return usuarios;
     }
 
-    [HttpGet("email/{email}")]
-    public ActionResult<Usuario> GetEmail(string email)
-    {
-        UsuarioAppServices appServices = new UsuarioAppServices(_context, _validator);
-        var usuario = appServices.BuscaUsuarioEmail(email);
-
-        if (usuario is null)
-        {
-            return NotFound("Usuario não encontrado...");
-        }
-
-        return usuario;
-    }
-
     [HttpGet("{id:int}")]
     public ActionResult<Usuario> GetId(int id)
     {
-        UsuarioAppServices appServices = new UsuarioAppServices(_context, _validator);
-        var usuario = appServices.BuscaUsuarioId(id);
+        var usuario = _usuarioAppServices.BuscaUsuarioId(id);
 
         if (usuario is null)
         {
@@ -77,11 +71,10 @@ public class UsuarioController : ControllerBase
         return usuario;
     }
 
-    [HttpPost("cadastro")]
+    [HttpPost]
     public ActionResult Post(Usuario usuario)
     {
-        UsuarioAppServices appServices = new UsuarioAppServices(_context, _validator);
-        var error = appServices.CadastraUsuario(usuario);
+        var error = _usuarioAppServices.CadastraUsuario(usuario);
 
         if(error is null)
         {
@@ -94,8 +87,7 @@ public class UsuarioController : ControllerBase
     [HttpPost("inativacao")]
     public ActionResult Post(Inativacao inativacao)
     {
-        InativacaoAppServices appServices = new InativacaoAppServices(_context, _validatorI);
-        var error = appServices.InativaConta(inativacao);
+        var error = _inativacaoAppServices.InativaConta(inativacao);
 
         if(error is null)
         {
@@ -105,11 +97,10 @@ public class UsuarioController : ControllerBase
         return BadRequest(error);
     }
 
-    [HttpPost("reativar/{id}:int")]
+    [HttpPut("inativacao/{id:int}")]
     public ActionResult Post(int id, DateTime dataFim)
     {
-        InativacaoAppServices appServices = new InativacaoAppServices(_context, _validatorI);
-        var error = appServices.AlteraInativacao(id, dataFim);
+        var error = _inativacaoAppServices.AlteraInativacao(id, dataFim);
 
         if (error is null)
         {
@@ -119,25 +110,37 @@ public class UsuarioController : ControllerBase
         return BadRequest(error);
     }
 
-    [HttpPost("login/{email}")]
+    [HttpPost("login")]
     public ActionResult<dynamic> Post(string email, string senha)
     {
-        UsuarioAppServices appServices = new UsuarioAppServices(_context, _validator);
-        var usuario = appServices.LogaUsuario(email, senha);
 
-        if (usuario is null)
+        var login = _usuarioAppServices.LogaUsuario(email, senha);
+
+        if (login is null)
         {
-            return BadRequest("Email ou senha incorreto");
+            return BadRequest("Não foi possivel concluir o login");
         }
 
-        return Ok(usuario);
+        return Ok(login);
+    }
+
+    [HttpPost("validacao")]
+    public ActionResult Post(string token)
+    {
+        var id = TokenAppServices.ValidateToken(token);
+
+        if (id == null)
+        {
+            return Unauthorized("Usuario não autorizado");
+        }
+
+        return Ok(id);
     }
 
     [HttpPut("{id:int}")]
     public ActionResult Put(int id, Usuario usuario)
     {
-        UsuarioAppServices appServices = new UsuarioAppServices(_context, _validator);
-        var error = appServices.AtualizaUsuario(id, usuario);
+        var error = _usuarioAppServices.AtualizaUsuario(id, usuario);
 
         if (error is null)
         {
@@ -151,8 +154,7 @@ public class UsuarioController : ControllerBase
     [HttpDelete("{id:int}")]
     public ActionResult Delete(int id)
     {
-        UsuarioAppServices appServices = new UsuarioAppServices(_context, _validator);
-        var error = appServices.DeletaUsuario(id);
+        var error = _usuarioAppServices.DeletaUsuario(id);
 
         if(error)
         {
