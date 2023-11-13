@@ -125,13 +125,13 @@ public class UsuarioController : ControllerBase
     }
 
     [HttpPost("validacao")]
-    public ActionResult Post(string token)
+    public ActionResult Post(Token token)
     {
-        var id = TokenAppServices.ValidateToken(token);
+        var id = TokenAppServices.ValidateToken(token.Key);
 
         if (id == null)
         {
-            return Unauthorized("Usuario não autorizado");
+            return Unauthorized();
         }
 
         return Ok(id);

@@ -20,7 +20,7 @@ public class TokenAppServices
             {
                 new Claim("id", usuario.UsuarioId.ToString())
             }),
-            Expires = DateTime.UtcNow.AddHours(6),
+            Expires = DateTime.UtcNow.AddSeconds(30),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
 
