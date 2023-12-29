@@ -10,4 +10,5 @@ public class AppDbContext : DbContext
 
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Inativacao> Inativacoes { get; set;}
+    public DbSet<TipoAcesso> TiposAcesso { get; set; }
 }

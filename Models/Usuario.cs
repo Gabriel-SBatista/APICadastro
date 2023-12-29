@@ -21,6 +21,10 @@ public class Usuario
     public string Email { get; set; }
     [Required]
     public string Senha { get; set; }
+    public int TipoAcessoId { get; set; }
+    [JsonIgnore]
+    public TipoAcesso? TipoAcesso { get; set; }
+    [JsonIgnore]
     public ICollection<Inativacao> Inativacoes { get; set; }
 
     public bool VerificaSenha()

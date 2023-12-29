@@ -127,14 +127,14 @@ public class UsuarioController : ControllerBase
     [HttpPost("validacao")]
     public ActionResult Post(Token token)
     {
-        var id = TokenAppServices.ValidateToken(token.Key);
+        var dadosUsuario = TokenAppServices.ValidateToken(token.Key);
 
-        if (id == null)
+        if (dadosUsuario == null)
         {
             return Unauthorized();
         }
 
-        return Ok(id);
+        return Ok(dadosUsuario);
     }
 
     [HttpPut("{id:int}")]
