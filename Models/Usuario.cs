@@ -1,31 +1,26 @@
 ﻿using FluentValidation;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace APICadastro.Models;
 
 public class Usuario
 {
-
-    public Usuario()
-    {
-        Inativacoes = new Collection<Inativacao>();
-    }
-    public int UsuarioId { get; set; }
-    [Required]
-    [MaxLength(20)]
+    [Column("Id")]
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public ObjectId UsuarioId { get; set; }
+    [Column("Nome")]
     public string Nome { get; set; }
-    [Required]
-    [MaxLength(30)]
+    [Column("Email")]
     public string Email { get; set; }
-    [Required]
+    [Column("Senha")]
     public string Senha { get; set; }
-    public int TipoAcessoId { get; set; }
-    [JsonIgnore]
-    public TipoAcesso? TipoAcesso { get; set; }
-    [JsonIgnore]
-    public ICollection<Inativacao> Inativacoes { get; set; }
+    [Column("TipoAcesso")]
+    public ObjectId TipoAcessoId { get; set; }
+    
 
     public bool VerificaSenha()
     {

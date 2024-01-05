@@ -1,23 +1,24 @@
-﻿using APICadastro.Context;
-using APICadastro.Migrations;
-using APICadastro.Models;
+﻿using APICadastro.Models;
+using APICadastro.Repositories;
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Bson;
 
 namespace APICadastro.Services;
 
 public class InativacaoAppServices
 {
-    private readonly AppDbContext _context;
+    private readonly InativacaoRepository _inativacaoRepository;
+    private readonly UsuarioAppServices _usuarioServices;
     private readonly IValidator<Inativacao> _validator;
 
-    public InativacaoAppServices(AppDbContext context, IValidator<Inativacao> validator)
+    public InativacaoAppServices(UsuarioAppServices usuarioServices, InativacaoRepository inativacaoRepository, IValidator<Inativacao> validator)
     {
-        _context = context;
+        _usuarioServices = usuarioServices;
+        _inativacaoRepository = inativacaoRepository;
         _validator = validator;
     }
 
-    public IEnumerable<string> InativaConta(Inativacao inativacao)
+    public async Task<IEnumerable<string>?> InativaConta(Inativacao inativacao)
     {
         
         var result = _validator.Validate(inativacao);
@@ -28,7 +29,7 @@ public class InativacaoAppServices
             return message;
         }
 
-        var usuario = _context.Usuarios.Include(u => u.Inativacoes).FirstOrDefault(u => u.UsuarioId ==  inativacao.UsuarioId);
+        var usuario = await _usuarioServices.BuscaUsuarioId(inativacao.UsuarioId);
 
         if (usuario is null)
         {
@@ -37,7 +38,9 @@ public class InativacaoAppServices
             return message;
         }
 
-        foreach (var item in usuario.Inativacoes)
+        var inativacoesDoUsuario = await BuscaInativacaoPorIdDeUsuario(usuario.UsuarioId);
+
+        foreach (var item in inativacoesDoUsuario)
         {
             if (item.DataFim > DateTime.Now || item.DataFim == null)
             {
@@ -47,35 +50,37 @@ public class InativacaoAppServices
             }
         }
 
-        _context.Inativacoes.Add(inativacao);
-        _context.SaveChanges();
+        await _inativacaoRepository.Insert(inativacao);
         return null;
         
     }
 
-    public IEnumerable<string> AlteraInativacao(int id, DateTime dataFim)
+    public async Task<string?> AlteraInativacao(ObjectId id, DateTime dataFim)
     {
-        var usuario = _context.Usuarios.Include(u => u.Inativacoes).FirstOrDefault(u => u.UsuarioId == id);
-        List<string> message = new List<string>();
+        var usuario = await _usuarioServices.BuscaUsuarioId(id);
 
         if (usuario is null)
         {          
-            message.Add("Usuario não encontrado...");
-            return message;
+            return("Usuario não encontrado...");
         }
 
-        foreach (var item in usuario.Inativacoes)
+        var inativacoesDoUsuario = await _inativacaoRepository.GetByUserId(id);
+
+        foreach (var item in inativacoesDoUsuario)
         {
             if(item.DataFim > DateTime.Now || item.DataFim == null)
             {
                 item.DataFim = dataFim;
-                _context.Update(item);
-                _context.SaveChanges();
+                await _inativacaoRepository.Update(item.InativacaoId, item);
                 return null;
             }
         }
 
-        message.Add("O usuario não esta inativo");
-        return message;
+        return("Usuario não esta inativado...");
+    }
+
+    public async Task<IEnumerable<Inativacao>> BuscaInativacaoPorIdDeUsuario(ObjectId id)
+    {
+        return await _inativacaoRepository.GetByUserId(id);
     }
 }

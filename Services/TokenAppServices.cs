@@ -11,7 +11,7 @@ public class TokenAppServices
     private readonly static string stringKey = "af6sl876fuwm5abz5wmbhbkyg23udigyt7dncgzs7vvx4bsgk0";
     public static string GenerateToken(Usuario usuario)
     {
-        string tipoAcesso;
+        /*string tipoAcesso;
         if (usuario.TipoAcessoId == 1)
         {
             tipoAcesso = "Admin";
@@ -19,12 +19,12 @@ public class TokenAppServices
         else
         {
             tipoAcesso = "Company";
-        }
+        }*/
 
         var claims = new List<Claim>
         {
             new Claim("id", usuario.UsuarioId.ToString()),
-            new Claim("acesso", tipoAcesso),
+            //new Claim("acesso", tipoAcesso),
             new Claim("nome", usuario.Nome)
         };
 

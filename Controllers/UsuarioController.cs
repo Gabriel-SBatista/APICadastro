@@ -1,13 +1,11 @@
-﻿using APICadastro.Context;
-using APICadastro.Models;
+﻿using APICadastro.Models;
 using Microsoft.AspNetCore.Mvc;
 using APICadastro.Services;
-using FluentValidation;
+using MongoDB.Bson;
 
 namespace APICadastro.Controllers;
 
 [ApiController]
-[Route("usuarios")]
 public class UsuarioController : ControllerBase
 {   
     private readonly UsuarioAppServices _usuarioAppServices;
@@ -19,69 +17,66 @@ public class UsuarioController : ControllerBase
         _inativacaoAppServices = inativacaoAppServices;
     }
 
-    [HttpGet]
-    public ActionResult<IEnumerable<Usuario>> Get()
+    [HttpGet("usuarios")]
+    public async Task<ActionResult> Get()
     {
-        var usuarios = _usuarioAppServices.BuscaUsuarios();
+        var usuarios = await _usuarioAppServices.BuscaUsuarios();
 
-        if (usuarios.Count == 0)
+        if (!usuarios.Any() || usuarios is null)
         {
             return NotFound();
         }
 
-        return usuarios;
+        return Ok(usuarios);
     }
 
-    [HttpGet("inativacao")]
-    public ActionResult<IEnumerable<Usuario>> GetInativo()
+    [HttpGet("inativacoes/usuario/{id}")]
+    public async Task<ActionResult> GetInativacaoByUserId(string id)
     {
-        var usuarios = _usuarioAppServices.BuscaInativacoes();
+        if (!ObjectId.TryParse(id, out var objectId))
+        {
+            return BadRequest("Formato de id invalido");
+        }
 
-        if (usuarios.Count == 0)
+        var usuarios = await _inativacaoAppServices.BuscaInativacaoPorIdDeUsuario(objectId);
+
+        if (!usuarios.Any() || usuarios is null)
         {
             return NotFound();
         }
 
-        return usuarios;
+        return Ok(usuarios);
     }
 
-    [HttpGet("{nome}")]
-    public ActionResult<IEnumerable<Usuario>> GetNome(string nome)
+    [HttpGet("usuario/{id}")]
+    public async Task<ActionResult> GetId(string id)
     {
-        var usuarios = _usuarioAppServices.BuscaUsuariosNome(nome);
-
-        if (usuarios.Count == 0)
+        if (!ObjectId.TryParse(id, out var objectId))
         {
-            return NotFound("Usuario não encontrado...");
+            return BadRequest("Formato de id invalido");
         }
 
-        return usuarios;
-    }
-
-    [HttpGet("{id:int}")]
-    public ActionResult<Usuario> GetId(int id)
-    {
-        var usuario = _usuarioAppServices.BuscaUsuarioId(id);
+        var usuario = await _usuarioAppServices.BuscaUsuarioId(objectId);
 
         if (usuario is null)
         {
             return NotFound("Usuario não encontrado...");
         }
 
-        return usuario;
+        return Ok(usuario);
     }
 
-    [HttpPost]
-    public ActionResult Post(Usuario usuario)
+    [HttpPost("usuario")]
+    public async Task<ActionResult> Post(Usuario usuario)
     {
-        var error = _usuarioAppServices.CadastraUsuario(usuario);
+        var errors = await _usuarioAppServices.CadastraUsuario(usuario);
 
-        if(error is null)
+        if(errors is null)
         {
             return Ok(usuario);
         }
 
-        return BadRequest(error);
+        return BadRequest(errors);
     }
 
     [HttpPost("inativacao")]
@@ -97,10 +92,15 @@ public class UsuarioController : ControllerBase
         return BadRequest(error);
     }
 
-    [HttpPut("inativacao/{id:int}")]
-    public ActionResult Post(int id, DateTime dataFim)
+    [HttpPut("inativacao/{id}")]
+    public ActionResult Post(string id, [FromBody] DateTime dataFim)
     {
-        var error = _inativacaoAppServices.AlteraInativacao(id, dataFim);
+        if (!ObjectId.TryParse(id, out var objectId))
+        {
+            return BadRequest("Formato de id invalido");
+        }
+
+        var error = _inativacaoAppServices.AlteraInativacao(objectId, dataFim);
 
         if (error is null)
         {
@@ -110,7 +110,7 @@ public class UsuarioController : ControllerBase
         return BadRequest(error);
     }
 
-    [HttpPost("login")]
+    /*[HttpPost("login")]
     public ActionResult<dynamic> Post(string email, string senha)
     {
 
@@ -122,7 +122,7 @@ public class UsuarioController : ControllerBase
         }
 
         return Ok(login);
-    }
+    }*/
 
     [HttpPost("validacao")]
     public ActionResult Post(Token token)
@@ -137,24 +137,34 @@ public class UsuarioController : ControllerBase
         return Ok(dadosUsuario);
     }
 
-    [HttpPut("{id:int}")]
-    public ActionResult Put(int id, Usuario usuario)
+    [HttpPut("usuario/{id}")]
+    public async Task<ActionResult> Put(string id, [FromBody] Usuario usuario)
     {
-        var error = _usuarioAppServices.AtualizaUsuario(id, usuario);
+        if (!ObjectId.TryParse(id, out var objectId))
+        {
+            return BadRequest("Formato de id invalido");
+        }
 
-        if (error is null)
+        var errors = await _usuarioAppServices.AtualizaUsuario(objectId, usuario);
+
+        if (errors is null)
         {
             usuario.Senha = "";
             return Ok(usuario);
         }
 
-        return BadRequest(error);
+        return BadRequest(errors);
     }
 
-    [HttpDelete("{id:int}")]
-    public ActionResult Delete(int id)
+    [HttpDelete("usuario/{id}")]
+    public async Task<ActionResult> Delete(string id)
     {
-        var error = _usuarioAppServices.DeletaUsuario(id);
+        if (!ObjectId.TryParse(id, out var objectId))
+        {
+            return BadRequest("Formato de id invalido");
+        }
+
+        var error = await _usuarioAppServices.DeletaUsuario(objectId);
 
         if(error)
         {

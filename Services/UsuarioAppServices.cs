@@ -1,22 +1,26 @@
 ﻿using APICadastro.Context;
 using APICadastro.Models;
+using APICadastro.Repositories;
 using FluentValidation;
 using FluentValidation.Results;
 using Isopoh.Cryptography.Argon2;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Bson;
 
 namespace APICadastro.Services;
 
 public class UsuarioAppServices
 {
-    private readonly AppDbContext _context;
+    private readonly UsuarioRepository _usuarioRepository;
     private readonly IValidator<Usuario> _validator;
-    public UsuarioAppServices(AppDbContext context, IValidator<Usuario> validator)
+    private readonly InativacaoRepository _inativacaoRepository;
+    public UsuarioAppServices(UsuarioRepository usuarioRepository, IValidator<Usuario> validator, InativacaoRepository inativacaoRepository)
     {
-        _context = context;
+        _usuarioRepository = usuarioRepository;
         _validator = validator;
+        _inativacaoRepository = inativacaoRepository;
     }
-    public IEnumerable<string> CadastraUsuario(Usuario usuario)
+    public async Task<IEnumerable<string>?> CadastraUsuario(Usuario usuario)
     {
         ValidationResult result = _validator.Validate(usuario);
         if(!result.IsValid)
@@ -25,9 +29,9 @@ public class UsuarioAppServices
             return message;
         }
 
-        var usuarioEmail = _context.Usuarios.FirstOrDefault(u => u.Email == usuario.Email);
+        var findByEmail = await _usuarioRepository.GetByEmail(usuario.Email);
 
-        if (usuarioEmail != null)
+        if (findByEmail != null)
         {
             List<string> message = new List<string>();
             message.Add("Email ja esta em uso...");
@@ -36,14 +40,13 @@ public class UsuarioAppServices
 
         usuario.Senha = Argon2.Hash(usuario.Senha);
 
-        _context.Usuarios.Add(usuario);
-        _context.SaveChanges();
+        await _usuarioRepository.Insert(usuario);
         return null;
     }
 
-    public IEnumerable<string> AtualizaUsuario(int id, Usuario usuario)
+    public async Task<IEnumerable<string>?> AtualizaUsuario(ObjectId id, Usuario usuario)
     {
-        var usuarioOriginal = _context.Usuarios.Find(id);
+        var usuarioOriginal = await _usuarioRepository.GetById(id);
         if(usuarioOriginal is null)
         {
             List<string> message = new List<string>();
@@ -53,9 +56,9 @@ public class UsuarioAppServices
 
         if(usuarioOriginal.Email != usuario.Email)
         {
-            var usuarioEmail = _context.Usuarios.FirstOrDefault(u => u.Email == usuario.Email);
+            var findByEmail = await _usuarioRepository.GetByEmail(usuario.Email);
 
-            if (usuarioEmail != null)
+            if (findByEmail != null)
             {
                 List<string> message = new List<string>();
                 message.Add("Email ja esta em uso...");
@@ -70,18 +73,13 @@ public class UsuarioAppServices
             return message;
         }
 
-        usuarioOriginal.Nome = usuario.Nome;
-        usuarioOriginal.Senha = Argon2.Hash(usuario.Senha);
-        usuarioOriginal.Email = usuario.Email;
-
-        _context.Update(usuarioOriginal);
-        _context.SaveChanges();
+        await _usuarioRepository.Update(id, usuario);
         return null;
     }
 
-    public dynamic LogaUsuario(string email, string senha)
+    public async Task<dynamic?> LogaUsuario(string email, string senha)
     {
-        var usuario = _context.Usuarios.Include(u => u.Inativacoes).FirstOrDefault(u => u.Email == email);
+        var usuario = await _usuarioRepository.GetByEmail(email);
         if (usuario is null)
         {
             return null;
@@ -89,9 +87,11 @@ public class UsuarioAppServices
 
         if (Argon2.Verify(usuario.Senha, senha))
         {
-            foreach (var item in  usuario.Inativacoes)
+            var inativacooesDoUsuario = await _inativacaoRepository.GetByUserId(usuario.UsuarioId);
+
+            foreach (var inativacao in inativacooesDoUsuario)
             {
-                if (item.DataFim > DateTime.Now)
+                if (inativacao.DataFim > DateTime.Now)
                 {
                     return null;
                 }
@@ -109,44 +109,36 @@ public class UsuarioAppServices
             return null;
     }
 
-    public bool DeletaUsuario(int id)
+    public async Task<bool> DeletaUsuario(ObjectId id)
     {
-        Usuario usuario = _context.Usuarios.Find(id);
+        Usuario usuario = await _usuarioRepository.GetById(id);
         if (usuario is null)
         {
             return true;
         }
 
-        _context.Remove(usuario);
-        _context.SaveChanges();
+        await _usuarioRepository.Delete(id);
         return false;
     }
 
-    public List<Usuario> BuscaUsuarios()
+    public async Task<IEnumerable<Usuario>> BuscaUsuarios()
     {
-        var usuarios = _context.Usuarios.AsNoTrackingWithIdentityResolution().ToList();
+        var usuarios = await _usuarioRepository.GetAll();
 
         return usuarios;
     }
 
-    public List<Usuario> BuscaUsuariosNome(string nome)
-    {      
-        var usuarios = _context.Usuarios.AsNoTrackingWithIdentityResolution().Where(u => u.Email == nome || u.Nome == nome).ToList();
-
-        return usuarios;
-    }
-
-    public Usuario BuscaUsuarioId(int id)
+    public async Task<Usuario> BuscaUsuarioId(ObjectId id)
     {
-        var usuario = _context.Usuarios.AsNoTrackingWithIdentityResolution().FirstOrDefault(u => u.UsuarioId == id);
+        var usuario = await _usuarioRepository.GetById(id);
 
         return usuario;
     }
 
-    public List<Usuario> BuscaInativacoes()
+    /*public List<Usuario> BuscaInativacoes()
     {
         var usuarios = _context.Usuarios.AsNoTrackingWithIdentityResolution().Include(u => u.Inativacoes).ToList();
 
         return usuarios;
-    }
+    }*/
 }
