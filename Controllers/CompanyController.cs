@@ -8,9 +8,9 @@ namespace APICadastro.Controllers;
 [ApiController]
 public class CompanyController : ControllerBase
 {
-    private readonly CompanyAppServices _companyServices;
+    private readonly CompanyServices _companyServices;
 
-    public CompanyController(CompanyAppServices companyServices)
+    public CompanyController(CompanyServices companyServices)
     {
         _companyServices = companyServices;
     }
@@ -47,7 +47,7 @@ public class CompanyController : ControllerBase
     }
 
     [HttpPost("empresa")]
-    public async Task<ActionResult> Post(Empresa company)
+    public async Task<ActionResult> Post(Company company)
     {
         var errors = await _companyServices.RegisterCompany(company);
 
@@ -60,7 +60,7 @@ public class CompanyController : ControllerBase
     }
 
     [HttpPut("empresa/{id}")]
-    public async Task<ActionResult> Put(string id, [FromBody] Empresa company)
+    public async Task<ActionResult> Put(string id, [FromBody] Company company)
     {
         if (!ObjectId.TryParse(id, out var objectId))
         {

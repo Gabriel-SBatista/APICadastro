@@ -5,20 +5,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace APICadastro.Models;
 
-public class Empresa
+public class Company
 {
     [Column("Id")]
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public ObjectId CompanyId { get; set; }
     [Column("Nome")]
-    public string Nome { get; set; }
+    public string Name { get; set; }
     [Column("Cnpj")]
     public long Cnpj { get; set; }
-    [Column("Usuarios")]
-    public ICollection<Usuario> Usuarios { get; set; }
 
-    public bool ValidarCnpj()
+    public bool ValidateCnpj()
     {
         string stringCnpj = Cnpj.ToString();
 
@@ -31,12 +29,12 @@ public class Empresa
     }
 }
 
-public class EmpresaValidator : AbstractValidator<Empresa>
+public class CompanyValidator : AbstractValidator<Company>
 {
-    public EmpresaValidator()
+    public CompanyValidator()
     {
-        RuleFor(c => c.Nome).NotEmpty();
+        RuleFor(c => c.Name).NotEmpty();
         RuleFor(c => c.Cnpj).NotEmpty();
-        RuleFor(c => c.ValidarCnpj()).Must(c => c == true).WithMessage("Cnpj invalido");
+        RuleFor(c => c.ValidateCnpj()).Must(c => c == true).WithMessage("Cnpj invalido");
     }
 }

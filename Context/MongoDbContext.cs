@@ -14,8 +14,8 @@ public class MongoDbContext
         _database = client.GetDatabase(settings.Value.DatabaseName);
     }
 
-    public IMongoCollection<Usuario> Usuarios => _database.GetCollection<Usuario>("Usuarios");
-    public IMongoCollection<Empresa> Empresas => _database.GetCollection<Empresa>("Empresas");
-    public IMongoCollection<Inativacao> Inativacoes => _database.GetCollection<Inativacao>("Inativacoes");
-    public IMongoCollection<TipoAcesso> TiposAcesso => _database.GetCollection<TipoAcesso>("TiposAcesso");
+    public IMongoCollection<User> Users => _database.GetCollection<User>("Usuarios");
+    public IMongoCollection<Company> Companies => _database.GetCollection<Company>("Empresas");
+    public IMongoCollection<Inactivation> Inactivations => _database.GetCollection<Inactivation>("Inativacoes");
+    public IMongoCollection<AccessType> AccessTypes => _database.GetCollection<AccessType>("TiposAcesso");
 }

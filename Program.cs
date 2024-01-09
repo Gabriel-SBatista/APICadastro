@@ -17,16 +17,17 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection(nameof(MongoDBSettings)));
 builder.Services.AddSingleton<MongoDbContext>();
-builder.Services.AddScoped<IValidator<Usuario>, UsuarioValidator>();
-builder.Services.AddScoped<IValidator<Inativacao>, InativacaoValidator>();
-builder.Services.AddScoped<IValidator<Empresa>, EmpresaValidator>();
-builder.Services.AddScoped<UsuarioAppServices>();
-builder.Services.AddScoped<InativacaoAppServices>();
-builder.Services.AddScoped<CompanyAppServices>();
-builder.Services.AddScoped<UsuarioRepository>();
+builder.Services.AddScoped<IValidator<User>, UserValidator>();
+builder.Services.AddScoped<IValidator<Inactivation>, InactivationValidator>();
+builder.Services.AddScoped<IValidator<Company>, CompanyValidator>();
+builder.Services.AddScoped<UserServices>();
+builder.Services.AddScoped<InactivationServices>();
+builder.Services.AddScoped<CompanyServices>();
+builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<CompanyRepository>();
-builder.Services.AddScoped<InativacaoRepository>();
-builder.Services.AddScoped<TipoAcessoRepository>();
+builder.Services.AddScoped<InactivationRepository>();
+builder.Services.AddScoped<AccessTypeRepository>();
+builder.Services.AddScoped<TokenServices>();
 
 var app = builder.Build();
 

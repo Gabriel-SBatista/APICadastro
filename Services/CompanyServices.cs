@@ -6,18 +6,18 @@ using MongoDB.Bson;
 
 namespace APICadastro.Services;
 
-public class CompanyAppServices
+public class CompanyServices
 {
     private readonly CompanyRepository _companyRepository;
-    private readonly IValidator<Empresa> _validator;
+    private readonly IValidator<Company> _validator;
 
-    public CompanyAppServices(CompanyRepository companyRepository, IValidator<Empresa> validator)
+    public CompanyServices(CompanyRepository companyRepository, IValidator<Company> validator)
     {
         _companyRepository = companyRepository;
         _validator = validator;
     }
 
-    public async Task<IEnumerable<string>?> RegisterCompany(Empresa company)
+    public async Task<IEnumerable<string>?> RegisterCompany(Company company)
     {
         ValidationResult result = _validator.Validate(company);
         if (!result.IsValid)
@@ -26,7 +26,7 @@ public class CompanyAppServices
             return message;
         }
 
-        var findByCnpj = _companyRepository.GetByCnpj(company.Cnpj);
+        var findByCnpj = await _companyRepository.GetByCnpj(company.Cnpj);
 
         if (findByCnpj != null)
         {
@@ -39,7 +39,7 @@ public class CompanyAppServices
         return null;
     }
 
-    public async Task<IEnumerable<string>?> UpdateCompany(ObjectId id, Empresa company)
+    public async Task<IEnumerable<string>?> UpdateCompany(ObjectId id, Company company)
     {
         var actualCompany = await _companyRepository.GetById(id);
         if (actualCompany is null)
@@ -79,14 +79,14 @@ public class CompanyAppServices
         return false;
     }
 
-    public async Task<IEnumerable<Empresa>> FindCompanies()
+    public async Task<IEnumerable<Company>> FindCompanies()
     { 
         var companies = await _companyRepository.GetAll();
 
         return companies;
     }
 
-    public async Task<Empresa> FindCompanyById(ObjectId id)
+    public async Task<Company> FindCompanyById(ObjectId id)
     {
         var company = await _companyRepository.GetById(id);
 

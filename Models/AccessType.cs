@@ -1,16 +1,15 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace APICadastro.Models;
 
-public class TipoAcesso
+public class AccessType
 {
     [Column("Id")]
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public ObjectId TipoAcessoId { get; set; }
+    public ObjectId AccessTypeId { get; set; }
     [Column("Tipo_Acesso")]
-    public string Tipos { get; set; }
+    public string Type { get; set; }
 }

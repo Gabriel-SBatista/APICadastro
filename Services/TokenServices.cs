@@ -1,31 +1,40 @@
 ﻿using APICadastro.Models;
+using APICadastro.Repositories;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
 namespace APICadastro.Services;
 
-public class TokenAppServices
+public class TokenServices
 {
     private readonly static string stringKey = "af6sl876fuwm5abz5wmbhbkyg23udigyt7dncgzs7vvx4bsgk0";
-    public static string GenerateToken(Usuario usuario)
+    private readonly AccessTypeRepository _accessTypeRepository;
+    private readonly CompanyRepository _companyRepository;
+
+    public TokenServices(AccessTypeRepository accessTypeRepository, CompanyRepository companyRepository)
     {
-        /*string tipoAcesso;
-        if (usuario.TipoAcessoId == 1)
+        _accessTypeRepository = accessTypeRepository;
+        _companyRepository = companyRepository;
+    }
+    public async Task<string> GenerateToken(User user)
+    {
+        var accessType = await _accessTypeRepository.GetById(ObjectId.Parse(user.AccessTypeId));
+        Company? company = null;
+
+        if(user.CompanyId != null)
         {
-            tipoAcesso = "Admin";
-        }
-        else
-        {
-            tipoAcesso = "Company";
-        }*/
+            company = await _companyRepository.GetById(ObjectId.Parse(user.CompanyId));
+        }      
 
         var claims = new List<Claim>
         {
-            new Claim("id", usuario.UsuarioId.ToString()),
-            //new Claim("acesso", tipoAcesso),
-            new Claim("nome", usuario.Nome)
+            new Claim("id", user.UserId.ToString()),
+            new Claim("access", accessType.Type),
+            new Claim("name", user.Name),
+            new Claim("company", company.Name)
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(stringKey));
@@ -40,7 +49,7 @@ public class TokenAppServices
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public static object? ValidateToken(string token)
+    public object? ValidateToken(string token)
     {
         if (token == null)
         {
@@ -66,8 +75,9 @@ public class TokenAppServices
             return new
             {
                 UserId = jwtToken.Claims.First(x => x.Type == "id").Value,
-                Name = jwtToken.Claims.First(x => x.Type == "nome").Value,
-                Role = jwtToken.Claims.First(x => x.Type == "acesso").Value
+                Name = jwtToken.Claims.First(x => x.Type == "name").Value,
+                Role = jwtToken.Claims.First(x => x.Type == "access").Value,
+                Company = jwtToken.Claims.First(x => x.Type == "company").Value
             };
         }
         catch

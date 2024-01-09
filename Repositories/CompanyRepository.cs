@@ -14,34 +14,34 @@ public class CompanyRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Empresa>> GetAll()
+    public async Task<IEnumerable<Company>> GetAll()
     {
-        return await _context.Empresas.Find(c => true).ToListAsync();
+        return await _context.Companies.Find(c => true).ToListAsync();
     }
 
-    public async Task<Empresa> GetById(ObjectId id)
+    public async Task<Company> GetById(ObjectId? id)
     {
-        return await _context.Empresas.Find(c => c.CompanyId == id).FirstOrDefaultAsync();
+        return await _context.Companies.Find(c => c.CompanyId == id).FirstOrDefaultAsync();
     }
 
-    public async Task<Empresa> GetByCnpj(long cnpj)
+    public async Task<Company> GetByCnpj(long cnpj)
     {
-        return await _context.Empresas.Find(c => c.Cnpj == cnpj).FirstOrDefaultAsync();
+        return await _context.Companies.Find(c => c.Cnpj == cnpj).FirstOrDefaultAsync();
     }
 
-    public async Task Insert(Empresa company)
+    public async Task Insert(Company company)
     {
         company.CompanyId = ObjectId.GenerateNewId();
-        await _context.Empresas.InsertOneAsync(company);
+        await _context.Companies.InsertOneAsync(company);
     }
 
-    public async Task Update(ObjectId id, Empresa company)
+    public async Task Update(ObjectId id, Company company)
     {
-        await _context.Empresas.ReplaceOneAsync(c => c.CompanyId == id, company);
+        await _context.Companies.ReplaceOneAsync(c => c.CompanyId == id, company);
     }
 
     public async Task Delete(ObjectId id)
     {
-        await _context.Empresas.DeleteOneAsync(c => c.CompanyId == id);
+        await _context.Companies.DeleteOneAsync(c => c.CompanyId == id);
     }
 }

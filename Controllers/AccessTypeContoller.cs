@@ -7,11 +7,11 @@ using MongoDB.Bson;
 namespace APICadastro.Controllers;
 
 [ApiController]
-public class TipoAcessoContoller : ControllerBase
+public class AccessTypeContoller : ControllerBase
 {
-    private readonly TipoAcessoRepository _repository;
+    private readonly AccessTypeRepository _repository;
 
-    public TipoAcessoContoller(TipoAcessoRepository repository)
+    public AccessTypeContoller(AccessTypeRepository repository)
     {
         _repository = repository;
     }
@@ -29,7 +29,7 @@ public class TipoAcessoContoller : ControllerBase
         return Ok(tiposAcesso);
     }
 
-    [HttpGet("tipoAcesso/{id}")]
+    [HttpGet("accessType/{id}")]
     public async Task<ActionResult> GetId(string id)
     {
         if (!ObjectId.TryParse(id, out var objectId))
@@ -37,38 +37,38 @@ public class TipoAcessoContoller : ControllerBase
             return BadRequest("Formato de id invalido");
         }
 
-        var tipoAcesso = await _repository.GetById(objectId);
+        var accessType = await _repository.GetById(objectId);
 
-        if (tipoAcesso is null)
+        if (accessType is null)
         {
             return NotFound("Tipo não encontrado...");
         }
 
-        return Ok(tipoAcesso);
+        return Ok(accessType);
     }
 
-    [HttpPost("tipoAcesso")]
-    public async Task<ActionResult> Post(TipoAcesso tipoAcesso)
+    [HttpPost("accessType")]
+    public async Task<ActionResult> Post(AccessType accessType)
     {
-        await _repository.Insert(tipoAcesso);
+        await _repository.Insert(accessType);
 
-        return Ok(tipoAcesso);
+        return Ok(accessType);
     }
 
-    [HttpPut("tipoAcesso/{id}")]
-    public async Task<ActionResult> Put(string id, [FromBody] TipoAcesso tipoAcesso)
+    [HttpPut("accessType/{id}")]
+    public async Task<ActionResult> Put(string id, [FromBody] AccessType accessType)
     {
         if (!ObjectId.TryParse(id, out var objectId))
         {
             return BadRequest("Formato de id invalido");
         }
 
-        await _repository.Update(objectId, tipoAcesso);
+        await _repository.Update(objectId, accessType);
 
-        return Ok(tipoAcesso);
+        return Ok(accessType);
     }
 
-    [HttpDelete("tipoAcesso/{id}")]
+    [HttpDelete("accessType/{id}")]
     public async Task<ActionResult> Delete(string id)
     {
         if (!ObjectId.TryParse(id, out var objectId))
