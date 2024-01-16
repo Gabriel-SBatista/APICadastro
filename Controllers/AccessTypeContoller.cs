@@ -1,6 +1,5 @@
 ﻿using APICadastro.Models;
 using APICadastro.Repositories;
-using APICadastro.Services;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 
@@ -19,14 +18,14 @@ public class AccessTypeContoller : ControllerBase
     [HttpGet("tiposAcesso")]
     public async Task<ActionResult> Get()
     {
-        var tiposAcesso = await _repository.GetAll();
+        var accessType = await _repository.GetAll();
 
-        if (!tiposAcesso.Any() || tiposAcesso is null)
+        if (!accessType.Any() || accessType is null)
         {
             return NotFound();
         }
 
-        return Ok(tiposAcesso);
+        return Ok(accessType);
     }
 
     [HttpGet("accessType/{id}")]

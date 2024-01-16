@@ -19,7 +19,7 @@ public class UserController : ControllerBase
         _tokenAppServices = tokenAppServices;
     }
 
-    [HttpGet("users")]
+    [HttpGet("usuarios")]
     public async Task<ActionResult> Get()
     {
         var users = await _userAppServices.SearchUsers();
@@ -32,7 +32,7 @@ public class UserController : ControllerBase
         return Ok(users);
     }
 
-    [HttpGet("inativacoes/user/{id}")]
+    [HttpGet("inativacoes/usuario/{id}")]
     public async Task<ActionResult> GetinactivationByUserId(string id)
     {
         if (!ObjectId.TryParse(id, out var objectId))
@@ -50,7 +50,7 @@ public class UserController : ControllerBase
         return Ok(users);
     }
 
-    [HttpGet("user/{id}")]
+    [HttpGet("usuario/{id}")]
     public async Task<ActionResult> GetId(string id)
     {
         if (!ObjectId.TryParse(id, out var objectId))
@@ -62,13 +62,13 @@ public class UserController : ControllerBase
 
         if (user is null)
         {
-            return NotFound("user não encontrado...");
+            return NotFound("usuario não encontrado...");
         }
 
         return Ok(user);
     }
 
-    [HttpPost("user")]
+    [HttpPost("usuario")]
     public async Task<ActionResult> Post(User user)
     {
         var errors = await _userAppServices.RegisterUser(user);
@@ -81,14 +81,14 @@ public class UserController : ControllerBase
         return BadRequest(errors);
     }
 
-    [HttpPost("inactivation")]
+    [HttpPost("inativacao")]
     public async Task<ActionResult> Post(Inactivation inactivation)
     {
         var error = await _inactivationAppServices.InactiveAccount(inactivation);
 
         if(error is null)
         {
-            return Ok("user inativado!!");
+            return Ok("usuario inativado!!");
         }
 
         return BadRequest(error);
@@ -106,7 +106,7 @@ public class UserController : ControllerBase
 
         if (error is null)
         {
-            return Ok("user reativado!");
+            return Ok("usuario reativado!");
         }
 
         return BadRequest(error);
@@ -129,17 +129,17 @@ public class UserController : ControllerBase
     [HttpPost("validacao")]
     public ActionResult Post(Token token)
     {
-        var dadosuser = _tokenAppServices.ValidateToken(token.Key);
+        var dataUser = _tokenAppServices.ValidateToken(token.Key);
 
-        if (dadosuser == null)
+        if (dataUser == null)
         {
             return Unauthorized();
         }
 
-        return Ok(dadosuser);
+        return Ok(dataUser);
     }
 
-    [HttpPut("user/{id}")]
+    [HttpPut("usuario/{id}")]
     public async Task<ActionResult> Put(string id, [FromBody] User user)
     {
         if (!ObjectId.TryParse(id, out var objectId))
@@ -158,7 +158,7 @@ public class UserController : ControllerBase
         return BadRequest(errors);
     }
 
-    [HttpDelete("user/{id}")]
+    [HttpDelete("usuario/{id}")]
     public async Task<ActionResult> Delete(string id)
     {
         if (!ObjectId.TryParse(id, out var objectId))
